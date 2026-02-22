@@ -895,23 +895,55 @@ local Library do
 
     local Success, Result = Library:SafeCall(function()
         for Index, Value in Decoded do 
-            local SetFunction = Library.SetFlags[Index]
-
-            if not SetFunction then
-                continue
-            end
-
-            if type(Value) == "table" and Value.Key then 
-                SetFunction(Value)
-            elseif type(Value) == "table" and Value.Color then
-                SetFunction(Value.Color, Value.Alpha)
-            else
-                SetFunction(Value)
+            
+            local ElementFound = false
+            
+            
+            for _, Page in pairs(self.Pages) do
+                if Page.Sections then
+                    for _, Section in pairs(Page.Sections) do
+                        
+                        if Section.Container then
+                            for _, Element in pairs(Section.Container:GetChildren()) do
+                                
+                                if Element.Flag == Index then
+                                    ElementFound = true
+                                    
+                                    if type(Value) == "table" and Value.Key then
+                                        
+                                        if Element.Set then
+                                            Element:Set(Value)
+                                        end
+                                    elseif type(Value) == "table" and Value.Color then
+                                        
+                                        if Element.Set then
+                                            Element:Set(Value.Color, Value.Alpha)
+                                        end
+                                    else
+                                        if Element.Set then
+                                            Element:Set(Value)
+                                        end
+                                    end
+                                    break
+                                end
+                            end
+                        end
+                    end
+                end
             end
             
-            -- ВОТ ЭТИ ДВЕ СТРОКИ:
-            task.wait() -- Даем время на обновление
-            Library.Flags[Index] = Value -- Принудительно сохраняем значение
+            if not ElementFound then
+                local SetFunction = Library.SetFlags[Index]
+                if SetFunction then
+                    if type(Value) == "table" and Value.Key then 
+                        SetFunction(Value)
+                    elseif type(Value) == "table" and Value.Color then
+                        SetFunction(Value.Color, Value.Alpha)
+                    else
+                        SetFunction(Value)
+                    end
+                end
+            end
         end
     end)
 
