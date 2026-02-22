@@ -891,30 +891,34 @@ local Library do
     end
 
     Library.LoadConfig = function(self, Config)
-        local Decoded = HttpService:JSONDecode(Config)
+    local Decoded = HttpService:JSONDecode(Config)
 
-        local Success, Result = Library:SafeCall(function()
-            for Index, Value in Decoded do 
-                local SetFunction = Library.SetFlags[Index]
+    local Success, Result = Library:SafeCall(function()
+        for Index, Value in Decoded do 
+            local SetFunction = Library.SetFlags[Index]
 
-                if not SetFunction then
-                    continue
-                end
-
-                if type(Value) == "table" and Value.Key then 
-                    SetFunction(Value)
-                elseif type(Value) == "table" and Value.Color then
-                    SetFunction(Value.Color, Value.Alpha)
-                else
-                    SetFunction(Value)
-                end
+            if not SetFunction then
+                continue
             end
-        end)
 
-        if Success then 
-            Library:Notification("Successfully loaded config", 5, FromRGB(0, 255, 0))
+            if type(Value) == "table" and Value.Key then 
+                SetFunction(Value)
+            elseif type(Value) == "table" and Value.Color then
+                SetFunction(Value.Color, Value.Alpha)
+            else
+                SetFunction(Value)
+            end
+            
+            -- ВОТ ЭТИ ДВЕ СТРОКИ:
+            task.wait() -- Даем время на обновление
+            Library.Flags[Index] = Value -- Принудительно сохраняем значение
         end
+    end)
+
+    if Success then 
+        Library:Notification("Successfully loaded config", 5, FromRGB(0, 255, 0))
     end
+									end
 
     Library.DeleteConfig = function(self, Config)
         if isfile(Library.Folders.Configs .. "/" .. Config) then 
