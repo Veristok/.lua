@@ -1,5 +1,5 @@
 --[[
-    Made by samet.exe
+    Made by ...
 
     Assign different flags to each element to prevent from configs overriding eachother
     Example script is at the bottom
@@ -3395,21 +3395,7 @@ local Library do
             end
         end)
 
-        Library:Connect(UserInputService.InputChanged, function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseMovement then
-                if SlidingPalette then
-                    Colorpicker:SlidePalette(Input)
-                end
-
-                if SlidingHue then
-                    Colorpicker:SlideHue(Input)
-                end
-
-                if SlidingAlpha then
-                    Colorpicker:SlideAlpha(Input)
-                end
-            end
-        end)
+        
 
         if Data.Default then
             Colorpicker:Set(Data.Default, Data.Alpha)
@@ -3433,6 +3419,23 @@ local Library do
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             }) 
+
+											Library:Connect(UserInputService.InputChanged, function(Input)
+    -- Добавляем проверку на Touch
+    if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
+        if SlidingPalette then
+            Colorpicker:SlidePalette(Input)
+        end
+
+        if SlidingHue then
+            Colorpicker:SlideHue(Input)
+        end
+
+        if SlidingAlpha then
+            Colorpicker:SlideAlpha(Input)
+        end
+    end
+end)
 
             Items["Text"] = Instances:Create("TextLabel", {
                 Parent = Items["Label"].Instance,
