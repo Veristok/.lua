@@ -3357,43 +3357,43 @@ local Library do
         end)
 
         Items["Palette"]:Connect("InputBegan", function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                SlidingPalette = true
-                Colorpicker:SlidePalette(Input)
-            end
-        end)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then  -- ← ДОБАВЛЕНО
+        SlidingPalette = true
+        Colorpicker:SlidePalette(Input)
+    end
+end)
 
         Items["Palette"]:Connect("InputEnded", function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                SlidingPalette = false
-            end
-        end)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then  -- ← ДОБАВЛЕНО
+        SlidingPalette = false
+    end
+end)
 
         Items["Hue"]:Connect("InputBegan", function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                SlidingHue = true
-                Colorpicker:SlideHue(Input)
-            end
-        end)
-
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then  -- ← ДОБАВЛЕНО
+        SlidingHue = true
+        Colorpicker:SlideHue(Input)
+    end
+end)
+										
         Items["Hue"]:Connect("InputEnded", function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                SlidingHue = false
-            end
-        end)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then  -- ← ДОБАВЛЕНО
+        SlidingHue = false
+    end
+end)
 
         Items["Alpha"]:Connect("InputBegan", function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                SlidingAlpha = true
-                Colorpicker:SlideAlpha(Input)
-            end
-        end)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then  -- ← ДОБАВЛЕНО
+        SlidingAlpha = true
+        Colorpicker:SlideAlpha(Input)
+    end
+end)
 
         Items["Alpha"]:Connect("InputEnded", function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                SlidingAlpha = false
-            end
-        end)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then  -- ← ДОБАВЛЕНО
+        SlidingAlpha = false
+    end
+end)
 
         
 
@@ -3420,22 +3420,7 @@ local Library do
                 BackgroundColor3 = FromRGB(255, 255, 255)
             }) 
 
-											Library:Connect(UserInputService.InputChanged, function(Input)
-    -- Добавляем проверку на Touch
-    if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
-        if SlidingPalette then
-            Colorpicker:SlidePalette(Input)
-        end
-
-        if SlidingHue then
-            Colorpicker:SlideHue(Input)
-        end
-
-        if SlidingAlpha then
-            Colorpicker:SlideAlpha(Input)
-        end
-    end
-end)
+											
 
             Items["Text"] = Instances:Create("TextLabel", {
                 Parent = Items["Label"].Instance,
@@ -3456,6 +3441,23 @@ end)
 
         return Items
     end
+
+									Library:Connect(UserInputService.InputChanged, function(Input)
+    -- Добавляем Touch для отслеживания движения пальца
+    if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then  -- ← ИСПРАВЛЕНО
+        if SlidingPalette then
+            Colorpicker:SlidePalette(Input)
+        end
+
+        if SlidingHue then
+            Colorpicker:SlideHue(Input)
+        end
+
+        if SlidingAlpha then
+            Colorpicker:SlideAlpha(Input)
+        end
+    end
+end)
 
     Components.Keybind = function(Data)
         local Keybind = {
