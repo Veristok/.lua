@@ -4852,13 +4852,6 @@ end)
             Tooltip = Toggle.Tooltip
         })
 
-										-- ========== ВСТАВЬ ЭТО ==========
-if not Library.SetFlags then Library.SetFlags = {} end
-Library.SetFlags[Data.Flag] = function(Value)
-    NewToggle:Set(Value)
-end
--- ================================
-
         function Toggle:Set(Value)
             NewToggle:Set(Value)
         end
@@ -5046,13 +5039,6 @@ end
             Callback = Slider.Callback
         })
 
-										-- ========== ВСТАВЬ ЭТО ==========
-if not Library.SetFlags then Library.SetFlags = {} end
-Library.SetFlags[Data.Flag] = function(Value)
-    NewSlider:Set(Value)
-end
--- ================================
-
         function Slider:Set(Value)
             NewSlider:Set(Value)
         end
@@ -5093,13 +5079,6 @@ end
             Callback = Dropdown.Callback,
             Multi = Dropdown.Multi
         })
-
-										-- ========== ВСТАВЬ ЭТО ==========
-if not Library.SetFlags then Library.SetFlags = {} end
-Library.SetFlags[Data.Flag] = function(Value)
-    NewDropdown:Set(Value)
-end
--- ================================
 
         function Dropdown:Set(Value)
             NewDropdown:Set(Value)
