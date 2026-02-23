@@ -3465,22 +3465,6 @@ end)
         return Items
     end
 
-									Library:Connect(UserInputService.InputChanged, function(Input)
-    -- Добавляем Touch для отслеживания движения пальца
-    if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then  -- ← ИСПРАВЛЕНО
-        if SlidingPalette then
-            Colorpicker:SlidePalette(Input)
-        end
-
-        if SlidingHue then
-            Colorpicker:SlideHue(Input)
-        end
-
-        if SlidingAlpha then
-            Colorpicker:SlideAlpha(Input)
-        end
-    end
-end)
 
     Components.Keybind = function(Data)
         local Keybind = {
