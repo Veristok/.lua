@@ -1,4 +1,4 @@
--- SaveManager.lua - Адаптировано для Xd.lua
+-- SaveManager.lua - ПОЛНАЯ АДАПТИРОВАННАЯ ВЕРСИЯ для Xd.lua
 local SaveManager = {}
 
 -- Настройки
@@ -7,13 +7,43 @@ SaveManager.SubFolder = "Configs"
 SaveManager.Ignore = {}
 SaveManager.Library = nil
 
--- Функции для работы с папками
+-- ===== ОСНОВНЫЕ ФУНКЦИИ =====
+
+function SaveManager:SetLibrary(lib)
+    self.Library = lib
+end
+
+function SaveManager:SetFolder(folder)
+    self.Folder = folder
+    self:BuildFolderTree()
+end
+
+function SaveManager:SetSubFolder(folder)
+    self.SubFolder = folder
+    self:BuildFolderTree()
+end
+
+function SaveManager:SetIgnoreIndexes(list)
+    for _, key in ipairs(list) do
+        self.Ignore[key] = true
+    end
+end
+
+function SaveManager:IgnoreThemeSettings()
+    self:SetIgnoreIndexes({
+        "Themes List", "Theme Name", "ThemesList",
+        "ThemeBackground", "ThemeMain", "ThemeAccent",
+        "ThemeText", "ThemeOutline", "Theme_"
+    })
+end
+
+-- ===== РАБОТА С ПАПКАМИ =====
+
 function SaveManager:BuildFolderTree()
     local paths = {
         self.Folder,
         self.Folder .. "/" .. self.SubFolder,
     }
-    
     for _, path in ipairs(paths) do
         if not isfolder(path) then
             makefolder(path)
@@ -21,7 +51,8 @@ function SaveManager:BuildFolderTree()
     end
 end
 
--- Сохранение конфига
+-- ===== СОХРАНЕНИЕ/ЗАГРУЗКА =====
+
 function SaveManager:Save(name)
     if not name then return false, "no name" end
     self:BuildFolderTree()
@@ -50,7 +81,7 @@ function SaveManager:Save(name)
             elseif value.HexValue then
                 obj.type = "ColorPicker"
                 obj.value = value.HexValue
-                obj.transparency = value.Alpha
+                obj.transparency = value.Alpha or 0
             else
                 obj.type = "Dropdown"
                 obj.value = value
@@ -65,7 +96,6 @@ function SaveManager:Save(name)
     return true
 end
 
--- Загрузка конфига
 function SaveManager:Load(name)
     if not name then return false, "no name" end
     
@@ -94,27 +124,64 @@ function SaveManager:Load(name)
     return true
 end
 
--- Остальные функции (Delete, Refresh, Autoload) - добавить по желанию
-
-function SaveManager:SetLibrary(lib)
-    self.Library = lib
+function SaveManager:Delete(name)
+    if not name then return false, "no name" end
+    
+    local path = string.format("%s/%s/%s.json", self.Folder, self.SubFolder, name)
+    if not isfile(path) then return false, "file not found" end
+    
+    delfile(path)
+    return true
 end
 
-function SaveManager:IgnoreThemeSettings()
-    self:SetIgnoreIndexes({
-        "Themes List", "Theme Name", "ThemesList",
-        "ThemeBackground", "ThemeMain", "ThemeAccent",
-        "ThemeText", "ThemeOutline"
-    })
-end
-
-function SaveManager:SetIgnoreIndexes(list)
-    for _, key in ipairs(list) do
-        self.Ignore[key] = true
+function SaveManager:RefreshConfigList()
+    local files = listfiles(self.Folder .. "/" .. self.SubFolder)
+    local list = {}
+    for _, file in ipairs(files) do
+        if file:match("%.json$") then
+            local name = file:match("([^/\\]+)%.json$")
+            if name then table.insert(list, name) end
+        end
     end
+    return list
 end
 
--- Создание GUI секции
+-- ===== АВТОЗАГРУЗКА =====
+
+function SaveManager:SaveAutoload(name)
+    if not name then return false end
+    self:BuildFolderTree()
+    local path = string.format("%s/%s/autoload.txt", self.Folder, self.SubFolder)
+    writefile(path, name)
+    return true
+end
+
+function SaveManager:GetAutoload()
+    local path = string.format("%s/%s/autoload.txt", self.Folder, self.SubFolder)
+    if isfile(path) then
+        return readfile(path)
+    end
+    return nil
+end
+
+function SaveManager:LoadAutoload()
+    local name = self:GetAutoload()
+    if name then
+        return self:Load(name)
+    end
+    return false
+end
+
+function SaveManager:DeleteAutoload()
+    local path = string.format("%s/%s/autoload.txt", self.Folder, self.SubFolder)
+    if isfile(path) then
+        delfile(path)
+    end
+    return true
+end
+
+-- ===== GUI СЕКЦИЯ =====
+
 function SaveManager:BuildConfigSection(section)
     assert(self.Library, "Set Library first!")
     
@@ -156,9 +223,25 @@ function SaveManager:BuildConfigSection(section)
             self.Library:Notification("Select config", 2, Color3.fromRGB(255,0,0))
             return
         end
-        local success = self:Load(name)
+        local success, err = self:Load(name)
         if success then
             self.Library:Notification("Loaded: " .. name, 2, Color3.fromRGB(0,255,0))
+        else
+            self.Library:Notification("Error: " .. err, 2, Color3.fromRGB(255,0,0))
+        end
+    end })
+    
+    -- Кнопка удаления
+    section:Button({ Name = "Delete config", Callback = function()
+        local name = self.Library.Flags.SM_ConfigList
+        if not name then
+            self.Library:Notification("Select config", 2, Color3.fromRGB(255,0,0))
+            return
+        end
+        local success = self:Delete(name)
+        if success then
+            self.Library:Notification("Deleted: " .. name, 2, Color3.fromRGB(0,255,0))
+            configDropdown:Refresh(self:RefreshConfigList())
         end
     end })
     
@@ -167,19 +250,18 @@ function SaveManager:BuildConfigSection(section)
         configDropdown:Refresh(self:RefreshConfigList())
     end })
     
-    self:SetIgnoreIndexes({ "SM_ConfigName", "SM_ConfigList" })
-end
-
-function SaveManager:RefreshConfigList()
-    local files = listfiles(self.Folder .. "/" .. self.SubFolder)
-    local list = {}
-    for _, file in ipairs(files) do
-        if file:match("%.json$") then
-            local name = file:match("([^/\\]+)%.json$")
-            if name then table.insert(list, name) end
+    -- Кнопка автозагрузки
+    section:Button({ Name = "Set autoload", Callback = function()
+        local name = self.Library.Flags.SM_ConfigList
+        if not name then
+            self.Library:Notification("Select config", 2, Color3.fromRGB(255,0,0))
+            return
         end
-    end
-    return list
+        self:SaveAutoload(name)
+        self.Library:Notification("Autoload: " .. name, 2, Color3.fromRGB(0,255,0))
+    end })
+    
+    self:SetIgnoreIndexes({ "SM_ConfigName", "SM_ConfigList" })
 end
 
 -- Инициализация
