@@ -891,57 +891,48 @@ local Library do
     end
 
     Library.LoadConfig = function(self, Config)
+    
+									end
+
+									Library.LoadConfig = function(self, Config)
     local Decoded = HttpService:JSONDecode(Config)
 
     local Success, Result = Library:SafeCall(function()
-        for Index, Value in Decoded do 
-            
+        for Flag, Value in pairs(Decoded) do
+         
             local ElementFound = false
-            
             
             for _, Page in pairs(self.Pages) do
                 if Page.Sections then
                     for _, Section in pairs(Page.Sections) do
-                        
-                        if Section.Container then
-                            for _, Element in pairs(Section.Container:GetChildren()) do
-                                
-                                if Element.Flag == Index then
-                                    ElementFound = true
-                                    
-                                    if type(Value) == "table" and Value.Key then
-                                        
-                                        if Element.Set then
-                                            Element:Set(Value)
-                                        end
-                                    elseif type(Value) == "table" and Value.Color then
-                                        
-                                        if Element.Set then
-                                            Element:Set(Value.Color, Value.Alpha)
-                                        end
-                                    else
-                                        if Element.Set then
-                                            Element:Set(Value)
-                                        end
-                                    end
-                                    break
-                                end
+                        if Section.Elements and Section.Elements[Flag] then
+                            local Element = Section.Elements[Flag]
+                            
+                            
+                            if type(Value) == "table" and Value.Key then
+                                Element:Set(Value)  -- Keybind
+                            elseif type(Value) == "table" and Value.Color then
+                                Element:Set(Value.Color, Value.Alpha)  -- Colorpicker
+                            else
+                                Element:Set(Value)  -- Toggle, Slider, Dropdown, Textbox, Listbox
                             end
+                            
+                            ElementFound = true
+                            break
                         end
                     end
                 end
+                if ElementFound then break end
             end
             
-            if not ElementFound then
-                local SetFunction = Library.SetFlags[Index]
-                if SetFunction then
-                    if type(Value) == "table" and Value.Key then 
-                        SetFunction(Value)
-                    elseif type(Value) == "table" and Value.Color then
-                        SetFunction(Value.Color, Value.Alpha)
-                    else
-                        SetFunction(Value)
-                    end
+            
+            if not ElementFound and Library.SetFlags[Flag] then
+                if type(Value) == "table" and Value.Key then
+                    Library.SetFlags[Flag](Value)
+                elseif type(Value) == "table" and Value.Color then
+                    Library.SetFlags[Flag](Value.Color, Value.Alpha)
+                else
+                    Library.SetFlags[Flag](Value)
                 end
             end
         end
