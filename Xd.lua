@@ -4851,7 +4851,7 @@ end)
         return Playerlist
     end
 
-    Library.Sections.Toggle(self, Data)
+    Library.Sections.Toggle = function(self, Data)
     Data = Data or { }
 
     local Toggle = {
@@ -5051,7 +5051,7 @@ end)
         return Button
     end
 
-    Library.Sections.Slider(self, Data)
+    Library.Sections.Slider = function(self, Data)
     Data = Data or { }
 
     local Slider = {
@@ -5098,7 +5098,7 @@ end)
     return Slider
 								end
 
-    Library.Sections.Dropdown(self, Data)
+    Library.Sections.Dropdown = function(self, Data)
     Data = Data or { }
 
     local Dropdown = {
@@ -5269,7 +5269,7 @@ end)
         return Label 
     end
 
-    Library.Sections.Listbox(self, Data)
+    Library.Sections.Listbox = function(self, Data)
     Data = Data or { }
 
     local Listbox = {
@@ -5321,14 +5321,13 @@ end)
         NewListbox:SetVisibility(Bool)
     end
 
-    ------------------- ДОБАВЬ ЭТО -------------------
+    
     if not self.Elements then self.Elements = {} end
     self.Elements[Listbox.Flag] = Listbox
-    -------------------------------------------------
+    
 
     return Listbox
 					end
-end
 
 getgenv().Library = Library
 return Library
