@@ -4409,6 +4409,7 @@ end)
             Side = Data.Side or Data.side or 1,
 
             Items = { }
+			Elements = {}
         }
 
         local Items = Components.Section({
