@@ -4859,137 +4859,153 @@ end)
         return Playerlist
     end
 
-    Library.Sections.Toggle = function(self, Data)
-        Data = Data or { }
+    Library.Sections.Toggle(self, Data)
+    Data = Data or { }
 
-        local Toggle = {
+    local Toggle = {
+        Window = self.Window,
+        Page = self.Page,
+        Section = self,
+
+        Name = Data.Name or Data.name or "Toggle",
+        Flag = Data.Flag or Data.flag or Library:NextFlag(),
+        Default = Data.Default or Data.default or false,
+        Callback = Data.Callback or Data.callback or function() end,
+        Risky = Data.Risky or Data.risky or false,
+        Tooltip = Data.Tooltip or Data.tooltip or nil,
+
+        Value = false,
+        Count = 0
+    }
+
+    local NewToggle, Items = Components.Toggle({
+        Name = Toggle.Name,
+        Parent = Toggle.Section.Items["Content"],
+        Risky = Toggle.Risky,
+        Flag = Toggle.Flag,
+        Default = Toggle.Default,
+        Callback = Toggle.Callback,
+        Tooltip = Toggle.Tooltip
+    })
+
+    function Toggle:Set(Value)
+        NewToggle:Set(Value)
+    end
+
+    function Toggle:Get()
+        return NewToggle:Get()
+    end
+
+    function Toggle:SetVisibility(Value)
+        NewToggle:SetVisibility(Value)
+    end
+
+    function Toggle:Colorpicker(Data)
+        Data = Data or { } 
+
+        local Colorpicker = {
             Window = self.Window,
             Page = self.Page,
             Section = self,
 
-            Name = Data.Name or Data.name or "Toggle",
+            Name = Data.Name or Data.name or "Colorpicker",
             Flag = Data.Flag or Data.flag or Library:NextFlag(),
-            Default = Data.Default or Data.default or false,
+            Default = Data.Default or Data.default or Color3.fromRGB(255, 255, 255),
             Callback = Data.Callback or Data.callback or function() end,
-            Risky = Data.Risky or Data.risky or false,
-            Tooltip = Data.Tooltip or Data.tooltip or nil,
-
-            Value = false,
-            Count = 0
+            Alpha = Data.Alpha or Data.alpha or false,
+            Count = Toggle.Count
         }
 
-        local NewToggle, Items = Components.Toggle({
-            Name = Toggle.Name,
-            Parent = Toggle.Section.Items["Content"],
-            Risky = Toggle.Risky,
-            Flag = Toggle.Flag,
-            Default = Toggle.Default,
-            Callback = Toggle.Callback,
-            Tooltip = Toggle.Tooltip
+        Toggle.Count += 1
+        Colorpicker.Count = Toggle.Count
+
+        local NewColorpicker, ColorpickerItems = Components.Colorpicker({
+            Name = Colorpicker.Name,
+            Parent = Items["Toggle"],
+            Flag = Colorpicker.Flag,
+            Default = Colorpicker.Default,
+            Callback = Colorpicker.Callback,
+            Count = Colorpicker.Count,
+            Alpha = Colorpicker.Alpha
         })
 
-        function Toggle:Set(Value)
-            NewToggle:Set(Value)
+        function Colorpicker:Set(Value, Alpha)
+            NewColorpicker:Set(Value, Alpha)
         end
 
-        function Toggle:Get()
-            return NewToggle:Get()
+        function Colorpicker:Get()
+            return NewColorpicker:Get()
         end
 
-        function Toggle:SetVisibility(Value)
-            NewToggle:SetVisibility(Value)
+        function Colorpicker:SetVisibility(Bool)
+            NewColorpicker:SetVisibility(Bool)
         end
 
-        function Toggle:Colorpicker(Data)
-            Data = Data or { } 
+        
+        if not self.Elements then self.Elements = {} end
+        self.Elements[Colorpicker.Flag] = Colorpicker
+        
 
-            local Colorpicker = {
-                Window = self.Window,
-                Page = self.Page,
-                Section = self,
-
-                Name = Data.Name or Data.name or "Colorpicker",
-                Flag = Data.Flag or Data.flag or Library:NextFlag(),
-                Default = Data.Default or Data.default or Color3.fromRGB(255, 255, 255),
-                Callback = Data.Callback or Data.callback or function() end,
-                Alpha = Data.Alpha or Data.alpha or false,
-                Count = Toggle.Count
-            }
-
-            Toggle.Count += 1
-            Colorpicker.Count = Toggle.Count
-
-            local NewColorpicker, ColorpickerItems = Components.Colorpicker({
-                Name = Colorpicker.Name,
-                Parent = Items["Toggle"],
-                Flag = Colorpicker.Flag,
-                Default = Colorpicker.Default,
-                Callback = Colorpicker.Callback,
-                Count = Colorpicker.Count,
-                Alpha = Colorpicker.Alpha
-            })
-
-            function Colorpicker:Set(Value, Alpha)
-                NewColorpicker:Set(Value, Alpha)
-            end
-
-            function Colorpicker:Get()
-                return NewColorpicker:Get()
-            end
-
-            function Colorpicker:SetVisibility(Bool)
-                NewColorpicker:SetVisibility(Bool)
-            end
-
-            return Colorpicker
-        end
-
-        function Toggle:Keybind(Data)
-            Data = Data or { }
-
-            local Keybind = {
-                Window = self.Window,
-                Page = self.Page,
-                Section = self,
-
-                Name = Data.Name or Data.name or "Keybind",
-                Flag = Data.Flag or Data.flag or Library:NextFlag(),
-                Default = Data.Default or Data.default or Enum.KeyCode.RightControl,
-                Mode = Data.Mode or Data.mode or "Toggle",
-                Callback = Data.Callback or Data.callback or function() end,
-                Tooltip = Data.Tooltip or Data.tooltip or nil,
-                Count = Toggle.Count
-            }
-
-            local NewKeybind, KeybindItems = Components.Keybind({
-                Name = Keybind.Name,
-                Parent = Items["Toggle"],
-                Flag = Keybind.Flag,
-                Default = Keybind.Default,
-                Tooltip = Keybind.Tooltip,
-                Mode = Keybind.Mode,
-                Callback = Keybind.Callback,
-                Count = Keybind.Count
-            })
-
-            function Keybind:Set(Value)
-                NewKeybind:Set(Value)
-            end
-
-            function Keybind:Get()
-                return NewKeybind:Get()
-            end
-
-            function Keybind:SetVisibility(Bool)
-                NewKeybind:SetVisibility(Bool)
-            end
-
-            return Keybind
-        end
-
-        return Toggle
+        return Colorpicker
     end
 
+    function Toggle:Keybind(Data)
+        Data = Data or { }
+
+        local Keybind = {
+            Window = self.Window,
+            Page = self.Page,
+            Section = self,
+
+            Name = Data.Name or Data.name or "Keybind",
+            Flag = Data.Flag or Data.flag or Library:NextFlag(),
+            Default = Data.Default or Data.default or Enum.KeyCode.RightControl,
+            Mode = Data.Mode or Data.mode or "Toggle",
+            Callback = Data.Callback or Data.callback or function() end,
+            Tooltip = Data.Tooltip or Data.tooltip or nil,
+            Count = Toggle.Count
+        }
+
+        local NewKeybind, KeybindItems = Components.Keybind({
+            Name = Keybind.Name,
+            Parent = Items["Toggle"],
+            Flag = Keybind.Flag,
+            Default = Keybind.Default,
+            Tooltip = Keybind.Tooltip,
+            Mode = Keybind.Mode,
+            Callback = Keybind.Callback,
+            Count = Keybind.Count
+        })
+
+        function Keybind:Set(Value)
+            NewKeybind:Set(Value)
+        end
+
+        function Keybind:Get()
+            return NewKeybind:Get()
+        end
+
+        function Keybind:SetVisibility(Bool)
+            NewKeybind:SetVisibility(Bool)
+        end
+
+        
+        if not self.Elements then self.Elements = {} end
+        self.Elements[Keybind.Flag] = Keybind
+        
+
+        return Keybind
+    end
+
+
+    if not self.Elements then self.Elements = {} end
+    self.Elements[Toggle.Flag] = Toggle
+    
+
+    return Toggle
+									end
+
+									
     Library.Sections.Button = function(self, Data)
         Data = Data or { }
 
@@ -5043,105 +5059,113 @@ end)
         return Button
     end
 
-    Library.Sections.Slider = function(self, Data)
-        Data = Data or { }
+    Library.Sections.Slider(self, Data)
+    Data = Data or { }
 
-        local Slider = {
-            Window = self.Window,
-            Page = self.Page,
-            Section = self,
+    local Slider = {
+        Window = self.Window,
+        Page = self.Page,
+        Section = self,
 
-            Name = Data.Name or Data.name or "Slider",
-            Flag = Data.Flag or Data.flag or Library:NextFlag(),
-            Min = Data.Min or Data.min or 0,
-            Default = Data.Default or Data.default or 0,
-            Max = Data.Max or Data.max or 100,
-            Tooltip = Data.Tooltip or Data.tooltip or nil,
-            Suffix = Data.Suffix or Data.suffix or "",
-            Decimals = Data.Decimals or Data.decimals or 1,
-            Callback = Data.Callback or Data.callback or function() end,
-        }
+        Name = Data.Name or Data.name or "Slider",
+        Flag = Data.Flag or Data.flag or Library:NextFlag(),
+        Min = Data.Min or Data.min or 0,
+        Default = Data.Default or Data.default or 0,
+        Max = Data.Max or Data.max or 100,
+        Tooltip = Data.Tooltip or Data.tooltip or nil,
+        Suffix = Data.Suffix or Data.suffix or "",
+        Decimals = Data.Decimals or Data.decimals or 1,
+        Callback = Data.Callback or Data.callback or function() end,
+    }
 
-        local NewSlider, Items = Components.Slider({
-            Name = Slider.Name,
-            Parent = Slider.Section.Items["Content"],
-            Flag = Slider.Flag,
-            Min = Slider.Min,
-            Default = Slider.Default,
-            Max = Slider.Max,
-            Tooltip = Slider.Tooltip,
-            Suffix = Slider.Suffix,
-            Decimals = Slider.Decimals,
-            Callback = Slider.Callback
-        })
+    local NewSlider, Items = Components.Slider({
+        Name = Slider.Name,
+        Parent = Slider.Section.Items["Content"],
+        Flag = Slider.Flag,
+        Min = Slider.Min,
+        Default = Slider.Default,
+        Max = Slider.Max,
+        Tooltip = Slider.Tooltip,
+        Suffix = Slider.Suffix,
+        Decimals = Slider.Decimals,
+        Callback = Slider.Callback
+    })
 
-        function Slider:Set(Value)
-            NewSlider:Set(Value)
-        end
-
-        function Slider:SetVisibility(Bool)
-            NewSlider:SetVisibility(Bool)
-        end
-
-        return Slider
+    function Slider:Set(Value)
+        NewSlider:Set(Value)
     end
 
-    Library.Sections.Dropdown = function(self, Data)
-        Data = Data or { }
-
-        local Dropdown = {
-            Window = self.Window,
-            Page = self.Page,
-            Section = self,
-
-            Name = Data.Name or Data.name or "Dropdown",
-            Flag = Data.Flag or Data.flag or Library:NextFlag(),
-            Items = Data.Items or Data.items or { },
-            Default = Data.Default or Data.default or nil,
-            Callback = Data.Callback or Data.callback or function() end,
-            Tooltip = Data.Tooltip or Data.tooltip or nil,
-            MaxSize = Data.MaxSize or Data.maxsize or 75,
-            Multi = Data.Multi or Data.multi or false,
-        }
-
-        local NewDropdown, Items = Components.Dropdown({
-            Name = Dropdown.Name,
-            Parent = Dropdown.Section.Items["Content"],
-            Flag = Dropdown.Flag,
-            Items = Dropdown.Items,
-            Tooltip = Dropdown.Tooltip,
-            MaxSize = Dropdown.MaxSize,
-            Default = Dropdown.Default,
-            Callback = Dropdown.Callback,
-            Multi = Dropdown.Multi
-        })
-
-        function Dropdown:Set(Value)
-            NewDropdown:Set(Value)
-        end
-
-        function Dropdown:Get()
-            return NewDropdown:Get()
-        end
-
-        function Dropdown:SetVisibility(Bool)
-            NewDropdown:SetVisibility(Bool)
-        end
-
-        function Dropdown:Refresh(List)
-            NewDropdown:Refresh(List)
-        end
-
-        function Dropdown:Remove(Option)
-            NewDropdown:Remove(Option)
-        end
-
-        function Dropdown:Add(Option)
-            NewDropdown:Add(Option)
-        end
-
-        return Dropdown
+    function Slider:SetVisibility(Bool)
+        NewSlider:SetVisibility(Bool)
     end
+
+    
+    if not self.Elements then self.Elements = {} end
+    self.Elements[Slider.Flag] = Slider
+
+    return Slider
+								end
+
+    Library.Sections.Dropdown(self, Data)
+    Data = Data or { }
+
+    local Dropdown = {
+        Window = self.Window,
+        Page = self.Page,
+        Section = self,
+
+        Name = Data.Name or Data.name or "Dropdown",
+        Flag = Data.Flag or Data.flag or Library:NextFlag(),
+        Items = Data.Items or Data.items or { },
+        Default = Data.Default or Data.default or nil,
+        Callback = Data.Callback or Data.callback or function() end,
+        Tooltip = Data.Tooltip or Data.tooltip or nil,
+        MaxSize = Data.MaxSize or Data.maxsize or 75,
+        Multi = Data.Multi or Data.multi or false,
+    }
+
+    local NewDropdown, Items = Components.Dropdown({
+        Name = Dropdown.Name,
+        Parent = Dropdown.Section.Items["Content"],
+        Flag = Dropdown.Flag,
+        Items = Dropdown.Items,
+        Tooltip = Dropdown.Tooltip,
+        MaxSize = Dropdown.MaxSize,
+        Default = Dropdown.Default,
+        Callback = Dropdown.Callback,
+        Multi = Dropdown.Multi
+    })
+
+    function Dropdown:Set(Value)
+        NewDropdown:Set(Value)
+    end
+
+    function Dropdown:Get()
+        return NewDropdown:Get()
+    end
+
+    function Dropdown:SetVisibility(Bool)
+        NewDropdown:SetVisibility(Bool)
+    end
+
+    function Dropdown:Refresh(List)
+        NewDropdown:Refresh(List)
+    end
+
+    function Dropdown:Remove(Option)
+        NewDropdown:Remove(Option)
+    end
+
+    function Dropdown:Add(Option)
+        NewDropdown:Add(Option)
+    end
+
+    
+    if not self.Elements then self.Elements = {} end
+    self.Elements[Dropdown.Flag] = Dropdown
+    
+    return Dropdown
+							end
 
     Library.Sections.Label = function(self, Text, Alignment)
         local Label = {
@@ -5253,101 +5277,65 @@ end)
         return Label 
     end
 
-    Library.Sections.Textbox = function(self, Data)
-        Data = Data or { }
+    Library.Sections.Listbox(self, Data)
+    Data = Data or { }
 
-        local Textbox = {
-            Window = self.Window,
-            Page = self.Page,
-            Section = self,
+    local Listbox = {
+        Window = self.Window,
+        Page = self.Page,
+        Section = self,
 
-            Name = Data.Name or Data.name or "Textbox",
-            Flag = Data.Flag or Data.flag or Library:NextFlag(),
-            Default = Data.Default or Data.default or "",
-            Tooltip = Data.Tooltip or Data.tooltip or nil,
-            Placeholder = Data.Placeholder or Data.placeholder or "...",
-            Callback = Data.Callback or Data.callback or function() end,
-        }
+        Name = Data.Name or Data.name or "Listbox",
+        Flag = Data.Flag or Data.flag or Library:NextFlag(),
+        Default = Data.Default or Data.default or { },
+        Callback = Data.Callback or Data.callback or function() end,
+        Multi = Data.Multi or Data.multi or false,
+        Items = Data.Items or Data.items or { },
+        Size = Data.Size or Data.size or 175
+    }
 
-        local NewTextbox, Items = Components.Textbox({
-            Name = Textbox.Name,
-            Parent = Textbox.Section.Items["Content"],
-            Flag = Textbox.Flag,
-            Tooltip = Textbox.Tooltip,
-            Default = Textbox.Default,
-            Placeholder = Textbox.Placeholder,
-            Callback = Textbox.Callback
-        })
+    local NewListbox, Items = Components.Listbox({
+        Name = Listbox.Name,
+        Parent = Listbox.Section.Items["Content"],
+        Flag = Listbox.Flag,
+        Default = Listbox.Default,
+        Callback = Listbox.Callback,
+        Multi = Listbox.Multi,
+        Items = Listbox.Items,
+        Size = Listbox.Size
+    })
 
-        function Textbox:Set(Value)
-            NewTextbox:Set(Value)
-        end
-
-        function Textbox:Get()
-            return NewTextbox:Get()
-        end
-
-        function Textbox:SetVisibility(Bool)
-            NewTextbox:SetVisibility(Bool)
-        end
-
-        return Textbox
+    function Listbox:Set(Option)
+        NewListbox:Set(Option)
     end
 
-    Library.Sections.Listbox = function(self, Data)
-        Data = Data or { }
-
-        local Listbox = {
-            Window = self.Window,
-            Page = self.Page,
-            Section = self,
-
-            Name = Data.Name or Data.name or "Listbox",
-            Flag = Data.Flag or Data.flag or Library:NextFlag(),
-            Default = Data.Default or Data.default or { },
-            Callback = Data.Callback or Data.callback or function() end,
-            Multi = Data.Multi or Data.multi or false,
-            Items = Data.Items or Data.items or { },
-            Size = Data.Size or Data.size or 175
-        }
-
-        local NewListbox, Items = Components.Listbox({
-            Name = Listbox.Name,
-            Parent = Listbox.Section.Items["Content"],
-            Flag = Listbox.Flag,
-            Default = Listbox.Default,
-            Callback = Listbox.Callback,
-            Multi = Listbox.Multi,
-            Items = Listbox.Items,
-            Size = Listbox.Size
-        })
-
-        function Listbox:Set(Option)
-            NewListbox:Set(Option)
-        end
-
-        function Listbox:Get()
-            return NewListbox:Get()
-        end
-
-        function Listbox:Add(Option)
-            NewListbox:Add(Option)
-        end
-
-        function Listbox:Remove(Option)
-            NewListbox:Remove(Option)
-        end
-
-        function Listbox:Refresh(List)
-            NewListbox:Refresh(List)
-        end
-
-        function Listbox:SetVisibility(Bool)
-            NewListbox:SetVisibility(Bool)
-        end
-
-        return Listbox
+    function Listbox:Get()
+        return NewListbox:Get()
     end
+
+    function Listbox:Add(Option)
+        NewListbox:Add(Option)
+    end
+
+    function Listbox:Remove(Option)
+        NewListbox:Remove(Option)
+    end
+
+    function Listbox:Refresh(List)
+        NewListbox:Refresh(List)
+    end
+
+    function Listbox:SetVisibility(Bool)
+        NewListbox:SetVisibility(Bool)
+    end
+
+    ------------------- ДОБАВЬ ЭТО -------------------
+    if not self.Elements then self.Elements = {} end
+    self.Elements[Listbox.Flag] = Listbox
+    -------------------------------------------------
+
+    return Listbox
+					end
 end
 
 getgenv().Library = Library
