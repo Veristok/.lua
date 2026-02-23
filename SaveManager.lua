@@ -78,22 +78,23 @@ function SaveManager:Save(name)
             if value.Key ~= nil then
                 -- ЭТО KEYBIND - сохраняем ВСЕ данные
                 obj.type = "KeyPicker"
-                obj.key = value.Key
+                -- Сохраняем КЛЮЧ как строку (имя клавиши)
+                if type(value.Key) == "userdata" and value.Key.ClassName == "EnumItem" then
+                    obj.key = value.Key.Name  -- Берем только имя (Z, RightControl, X и т.д.)
+                elseif type(value.Key) == "string" then
+                    obj.key = value.Key
+                else
+                    obj.key = tostring(value.Key)
+                end
                 obj.mode = value.Mode or "Toggle"
                 obj.toggled = value.Toggled or false
-                -- Сохраняем как строку, чтобы избежать проблем с Enum
-                if type(obj.key) == "userdata" then
-                    obj.key = tostring(obj.key)
-                end
             elseif value.HexValue ~= nil then
                 obj.type = "ColorPicker"
                 obj.value = value.HexValue
                 obj.transparency = value.Alpha or 0
             else
-                -- Обычный Dropdown (может быть строкой или таблицей)
                 obj.type = "Dropdown"
                 obj.value = value
-                obj.multi = type(value) == "table"
             end
         end
         
@@ -120,13 +121,7 @@ function SaveManager:Load(name)
         
         local setFunc = self.Library.SetFlags[obj.flag]
         if not setFunc then 
-            -- Если нет SetFlags, пробуем найти сам элемент
-            local element = self.Library.Flags[obj.flag]
-            if element and type(element) == "table" and element.SetValue then
-                setFunc = function(val) element:SetValue(val) end
-            else
-                continue
-            end
+            continue
         end
         
         -- Загружаем в зависимости от типа
@@ -137,14 +132,25 @@ function SaveManager:Load(name)
         elseif obj.type == "ColorPicker" then
             setFunc(obj.value, obj.transparency or 0)
         elseif obj.type == "KeyPicker" then
-            -- Восстанавливаем KeyBind с правильной структурой
+            -- ВОССТАНАВЛИВАЕМ KEYBIND С ТОЙ ЖЕ КЛАВИШЕЙ
+            -- Пробуем преобразовать строку обратно в Enum
             local keyValue = obj.key
-            -- Пробуем преобразовать обратно в Enum, если нужно
-            if type(keyValue) == "string" and keyValue:find("Enum") then
-                keyValue = Enum.KeyCode[keyValue:gsub("Enum.KeyCode.", "")] or keyValue
+            local keyEnum = nil
+            
+            -- Пытаемся найти Enum по имени
+            if keyValue then
+                keyEnum = Enum.KeyCode[keyValue]
+                if not keyEnum then
+                    keyEnum = Enum.UserInputType[keyValue]
+                end
             end
+            
+            -- Если нашли Enum - используем его, иначе оставляем как строку
+            local finalKey = keyEnum or keyValue
+            
+            -- Отправляем данные в KeyBind
             setFunc({ 
-                key = keyValue, 
+                key = finalKey, 
                 mode = obj.mode or "Toggle",
                 toggled = obj.toggled or false 
             })
