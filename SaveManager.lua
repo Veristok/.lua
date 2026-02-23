@@ -1,4 +1,4 @@
--- SaveManager.lua - ПОЛНАЯ АДАПТИРОВАННАЯ ВЕРСИЯ для Xd.lua
+-- SaveManager.lua - ПОЛНАЯ ВЕРСИЯ с Listbox и KeyBind поддержкой
 local SaveManager = {}
 
 -- Настройки
@@ -33,7 +33,7 @@ function SaveManager:IgnoreThemeSettings()
     self:SetIgnoreIndexes({
         "Themes List", "Theme Name", "ThemesList",
         "ThemeBackground", "ThemeMain", "ThemeAccent",
-        "ThemeText", "ThemeOutline", "Theme_"
+        "ThemeText", "ThemeOutline"
     })
 end
 
@@ -51,7 +51,7 @@ function SaveManager:BuildFolderTree()
     end
 end
 
--- ===== СОХРАНЕНИЕ/ЗАГРУЗКА =====
+-- ===== СОХРАНЕНИЕ =====
 
 function SaveManager:Save(name)
     if not name then return false, "no name" end
@@ -74,17 +74,26 @@ function SaveManager:Save(name)
             obj.type = "Input"
             obj.value = value
         elseif type(value) == "table" then
-            if value.Key then
+            -- Определяем тип по структуре таблицы
+            if value.Key ~= nil then
+                -- ЭТО KEYBIND - сохраняем ВСЕ данные
                 obj.type = "KeyPicker"
                 obj.key = value.Key
-                obj.mode = value.Mode
-            elseif value.HexValue then
+                obj.mode = value.Mode or "Toggle"
+                obj.toggled = value.Toggled or false
+                -- Сохраняем как строку, чтобы избежать проблем с Enum
+                if type(obj.key) == "userdata" then
+                    obj.key = tostring(obj.key)
+                end
+            elseif value.HexValue ~= nil then
                 obj.type = "ColorPicker"
                 obj.value = value.HexValue
                 obj.transparency = value.Alpha or 0
             else
+                -- Обычный Dropdown (может быть строкой или таблицей)
                 obj.type = "Dropdown"
                 obj.value = value
+                obj.multi = type(value) == "table"
             end
         end
         
@@ -95,6 +104,8 @@ function SaveManager:Save(name)
     writefile(string.format("%s/%s/%s.json", self.Folder, self.SubFolder, name), json)
     return true
 end
+
+-- ===== ЗАГРУЗКА =====
 
 function SaveManager:Load(name)
     if not name then return false, "no name" end
@@ -108,8 +119,17 @@ function SaveManager:Load(name)
         if self.Ignore[obj.flag] then continue end
         
         local setFunc = self.Library.SetFlags[obj.flag]
-        if not setFunc then continue end
+        if not setFunc then 
+            -- Если нет SetFlags, пробуем найти сам элемент
+            local element = self.Library.Flags[obj.flag]
+            if element and type(element) == "table" and element.SetValue then
+                setFunc = function(val) element:SetValue(val) end
+            else
+                continue
+            end
+        end
         
+        -- Загружаем в зависимости от типа
         if obj.type == "Toggle" or obj.type == "Slider" or obj.type == "Input" then
             setFunc(obj.value)
         elseif obj.type == "Dropdown" then
@@ -117,22 +137,34 @@ function SaveManager:Load(name)
         elseif obj.type == "ColorPicker" then
             setFunc(obj.value, obj.transparency or 0)
         elseif obj.type == "KeyPicker" then
-            setFunc({ key = obj.key, mode = obj.mode })
+            -- Восстанавливаем KeyBind с правильной структурой
+            local keyValue = obj.key
+            -- Пробуем преобразовать обратно в Enum, если нужно
+            if type(keyValue) == "string" and keyValue:find("Enum") then
+                keyValue = Enum.KeyCode[keyValue:gsub("Enum.KeyCode.", "")] or keyValue
+            end
+            setFunc({ 
+                key = keyValue, 
+                mode = obj.mode or "Toggle",
+                toggled = obj.toggled or false 
+            })
         end
     end
     
     return true
 end
 
+-- ===== УДАЛЕНИЕ =====
+
 function SaveManager:Delete(name)
     if not name then return false, "no name" end
-    
     local path = string.format("%s/%s/%s.json", self.Folder, self.SubFolder, name)
     if not isfile(path) then return false, "file not found" end
-    
     delfile(path)
     return true
 end
+
+-- ===== СПИСОК КОНФИГОВ =====
 
 function SaveManager:RefreshConfigList()
     local files = listfiles(self.Folder .. "/" .. self.SubFolder)
@@ -169,7 +201,7 @@ function SaveManager:LoadAutoload()
     if name then
         return self:Load(name)
     end
-    return false
+    return false, "no autoload"
 end
 
 function SaveManager:DeleteAutoload()
@@ -180,7 +212,7 @@ function SaveManager:DeleteAutoload()
     return true
 end
 
--- ===== GUI СЕКЦИЯ =====
+-- ===== GUI СЕКЦИЯ С LISTBOX =====
 
 function SaveManager:BuildConfigSection(section)
     assert(self.Library, "Set Library first!")
@@ -199,21 +231,28 @@ function SaveManager:BuildConfigSection(section)
             self.Library:Notification("Invalid name", 2, Color3.fromRGB(255,0,0))
             return
         end
-        local success = self:Save(name)
+        local success, err = self:Save(name)
         if success then
             self.Library:Notification("Created: " .. name, 2, Color3.fromRGB(0,255,0))
-            configDropdown:Refresh(self:RefreshConfigList())
+            configListbox:Refresh(self:RefreshConfigList())
+            -- Очищаем поле ввода
+            if nameInput and nameInput.Set then
+                nameInput:Set("")
+            end
+        else
+            self.Library:Notification("Error: " .. tostring(err), 2, Color3.fromRGB(255,0,0))
         end
     end })
     
     section:Label("──────────", "Center")
     
-    -- Список конфигов
-    local configDropdown = section:Dropdown({
-        Name = "Config list",
+    -- LISTBOX для списка конфигов (вместо Dropdown)
+    local configListbox = section:Listbox({
+        Name = "Configs list",
         Flag = "SM_ConfigList",
         Items = self:RefreshConfigList() or {},
-        MaxSize = 150
+        Size = 120,
+        Multi = false
     })
     
     -- Кнопка загрузки
@@ -227,7 +266,7 @@ function SaveManager:BuildConfigSection(section)
         if success then
             self.Library:Notification("Loaded: " .. name, 2, Color3.fromRGB(0,255,0))
         else
-            self.Library:Notification("Error: " .. err, 2, Color3.fromRGB(255,0,0))
+            self.Library:Notification("Error: " .. tostring(err), 2, Color3.fromRGB(255,0,0))
         end
     end })
     
@@ -241,17 +280,19 @@ function SaveManager:BuildConfigSection(section)
         local success = self:Delete(name)
         if success then
             self.Library:Notification("Deleted: " .. name, 2, Color3.fromRGB(0,255,0))
-            configDropdown:Refresh(self:RefreshConfigList())
+            configListbox:Refresh(self:RefreshConfigList())
         end
     end })
     
     -- Кнопка обновления списка
     section:Button({ Name = "Refresh list", Callback = function()
-        configDropdown:Refresh(self:RefreshConfigList())
+        configListbox:Refresh(self:RefreshConfigList())
     end })
     
+    section:Label("──────────", "Center")
+    
     -- Кнопка автозагрузки
-    section:Button({ Name = "Set autoload", Callback = function()
+    section:Button({ Name = "Set as autoload", Callback = function()
         local name = self.Library.Flags.SM_ConfigList
         if not name then
             self.Library:Notification("Select config", 2, Color3.fromRGB(255,0,0))
@@ -260,6 +301,16 @@ function SaveManager:BuildConfigSection(section)
         self:SaveAutoload(name)
         self.Library:Notification("Autoload: " .. name, 2, Color3.fromRGB(0,255,0))
     end })
+    
+    -- Кнопка сброса автозагрузки
+    section:Button({ Name = "Clear autoload", Callback = function()
+        self:DeleteAutoload()
+        self.Library:Notification("Autoload cleared", 2, Color3.fromRGB(255,255,0))
+    end })
+    
+    -- Информация об автозагрузке
+    local autoloadName = self:GetAutoload()
+    section:Label("Current autoload: " .. (autoloadName or "none"), "Left")
     
     self:SetIgnoreIndexes({ "SM_ConfigName", "SM_ConfigList" })
 end
