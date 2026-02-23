@@ -4951,8 +4951,13 @@ end)
             return Keybind
         end
 
-        return Toggle
-    end
+            
+    if not self.Elements then self.Elements = {} end
+    self.Elements[Toggle.Flag] = Toggle
+    
+    
+    return Toggle
+									end
 
     Library.Sections.Button = function(self, Data)
         Data = Data or { }
@@ -5043,12 +5048,17 @@ end)
             NewSlider:Set(Value)
         end
 
-        function Slider:SetVisibility(Bool)
-            NewSlider:SetVisibility(Bool)
-        end
-
-        return Slider
+            function Slider:SetVisibility(Bool)
+        NewSlider:SetVisibility(Bool)
     end
+
+    
+    if not self.Elements then self.Elements = {} end
+    self.Elements[Slider.Flag] = Slider
+    
+
+    return Slider
+									end
 
     Library.Sections.Dropdown = function(self, Data)
         Data = Data or { }
@@ -5100,12 +5110,17 @@ end)
             NewDropdown:Remove(Option)
         end
 
-        function Dropdown:Add(Option)
-            NewDropdown:Add(Option)
-        end
-
-        return Dropdown
+            function Dropdown:Add(Option)
+        NewDropdown:Add(Option)
     end
+
+    
+    if not self.Elements then self.Elements = {} end
+    self.Elements[Dropdown.Flag] = Dropdown
+    
+
+    return Dropdown
+									end
 
     Library.Sections.Label = function(self, Text, Alignment)
         local Label = {
@@ -5169,6 +5184,9 @@ end)
             function Colorpicker:SetVisibility(Bool)
                 NewColorpicker:SetVisibility(Bool)
             end
+
+	if not self.Elements then self.Elements = {} end
+    self.Elements[Colorpicker.Flag] = Colorpicker
 
             return Colorpicker
         end
