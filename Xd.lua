@@ -889,11 +889,7 @@ local Library do
 
         return HttpService:JSONEncode(Config)
     end
-
-    Library.LoadConfig = function(self, Config)
-    
-									end
-
+									
 									Library.LoadConfig = function(self, Config)
     local Decoded = HttpService:JSONDecode(Config)
 
