@@ -75,18 +75,19 @@ function SaveManager:Save(name)
             obj.value = value
         elseif type(value) == "table" then
             -- Определяем тип по структуре таблицы
-            if value.Key ~= nil then
-                -- ЭТО KEYBIND
-                obj.type = "KeyPicker"
-                -- Сохраняем имя клавиши как строку
+            if value.Key ~= nil and value.Mode ~= nil then
+                -- ЭТО KEYBIND (правильное определение)
+                obj.type = "Keybind"
+                
+                -- Сохраняем имя клавиши
                 if type(value.Key) == "userdata" and value.Key.ClassName == "EnumItem" then
                     obj.key = value.Key.Name
-                elseif type(value.Key) == "string" then
-                    obj.key = value.Key
                 else
                     obj.key = tostring(value.Key)
                 end
-                obj.mode = value.Mode or "Toggle"
+                
+                obj.mode = value.Mode
+                
             elseif value.HexValue ~= nil then
                 obj.type = "ColorPicker"
                 obj.value = value.HexValue
@@ -131,14 +132,14 @@ function SaveManager:Load(name)
                 setFunc(obj.value)
             elseif obj.type == "ColorPicker" then
                 setFunc(obj.value, obj.transparency or 0)
-            elseif obj.type == "KeyPicker" then
+            elseif obj.type == "Keybind" then  -- Важно: Keybind, а не KeyPicker!
                 -- Восстанавливаем KeyBind
                 local keyValue = obj.key
                 local keyEnum = nil
                 
-                -- Пробуем получить Enum, но не падаем если не получится
+                -- Пробуем получить Enum
                 if keyValue then
-                    local success1 = pcall(function()
+                    pcall(function()
                         keyEnum = Enum.KeyCode[keyValue]
                     end)
                     if not keyEnum then
@@ -149,13 +150,11 @@ function SaveManager:Load(name)
                 end
                 
                 setFunc({ 
-                    key = keyEnum or keyValue or "Unknown", 
+                    key = keyEnum or keyValue or Enum.KeyCode.Z, 
                     mode = obj.mode or "Toggle"
                 })
             end
         end)
-        
-        -- Если ошибка - просто пропускаем, ничего не пишем в консоль
     end
     
     return true
