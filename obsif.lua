@@ -3725,6 +3725,12 @@ do
             Parent = Holder,
         })
 
+		-- Добавляем закругление для бара
+New("UICorner", {
+    CornerRadius = UDim.new(0, 6.5), -- Половина от высоты 13px = овальная форма
+    Parent = Bar,
+})
+
         local DisplayLabel = New("TextLabel", {
             BackgroundTransparency = 1,
             Size = UDim2.fromScale(1, 1),
@@ -3749,6 +3755,12 @@ do
                 Size = true,
             },
         })
+
+		-- Добавляем такое же закругление для заполняемой части
+New("UICorner", {
+    CornerRadius = UDim.new(0, 6.5),
+    Parent = Fill,
+})
 
         function Slider:UpdateColors()
             if Library.Unloaded then
